@@ -1,3 +1,2 @@
 # zeroreport
-Spring Boot报表插件
-通过简单的配置SQL生成报表，以及报表权限管控。
+Spring Boot报表插件，通过简单的配置SQL即可生成报表，以及对报表进行权限管控。
