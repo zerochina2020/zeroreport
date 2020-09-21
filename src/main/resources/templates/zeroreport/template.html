@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>敏感数据处理工具</title>
+    <link rel="stylesheet" href="css/layui.css">
+</head>
+<body>
+    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief" style="margin-top: 0">
+        <ul class="layui-tab-title" style="text-align:center">
+            <li>秘钥设置</li>
+            <li class="layui-this">日志管理</li>
+            <li>工具配置</li>
+        </ul>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item">
+                <div class="layui-collapse" lay-filter="newKeyInfos">
+                    <div class="layui-colla-item">
+                        <h2 class="layui-colla-title">秘钥信息新增</h2>
+                        <div class="layui-colla-content layui-show">
+                            <form class="layui-form layui-form-pane" id="keyForm" lay-filter="keyForm">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">秘钥信息</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="key" lay-verify="key" autocomplete="off" placeholder="秘钥是A-Z、a-z、0-9组成的22位字符串" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">明文展示模式</label>
+                                        <div class="layui-input-block">
+                                            <select name="plaintextDisplayMode">
+                                                <option value="BOTH_ENDS" selected>两端明文</option>
+                                                <option value="LEFT">左边明文</option>
+                                                <option value="MIDDLE">中间明文</option>
+                                                <option value="RIGHT">右边明文</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">明文展示占比</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="plaintextProportion" onkeyup="value = getNumber(value)" lay-verify="plaintextProportion" placeholder="取值范围0~1之间两位小数" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline" style="float: right">
+                                        <button type="button" class="layui-btn layui-btn-normal" id="filling">自动填充</button>
+                                        <button type="button" class="layui-btn" id="newKeyInfo">新建秘钥</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="layui-colla-item">
+                        <h2 class="layui-colla-title">秘钥信息查看</h2>
+                        <div class="layui-colla-content">
+                            秘钥信息中只会有一条生效秘钥信息，新增秘钥后新增的秘钥信息将作为当前生效秘钥信息，当前生效秘钥信息用于处理秘钥创建之后需要存储展示且数据类型为EncryptData的数据，非生效秘钥只用于解密已加密存储的敏感数据。<br>
+                            <table class="layui-hide" id="keys"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-tab-item layui-show">日志管理</div>
+            <div class="layui-tab-item">工具配置</div>
+        </div>
+    </div>
+    <script src="layui.js"></script>
+    <script>
+        //一般直接写在一个js文件中
+        layui.use(['table', 'element', 'form', 'layer'], function(){
+            let table = layui.table, element = layui.element, form = layui.form, layer = layui.layer, $ = layui.jquery;
+            table.render({
+                elem: '#keys',
+                url:'key/info',
+                cellMinWidth: 60,
+                page: false,
+                response: {
+                    statusName: 'errorCode',
+                    statusCode: "SUCCESS",
+                    msgName: 'message',
+                    countName: 'totalSize',
+                    dataName: 'data'
+                },
+                cols: [[
+                    {field: 'id', title: '秘钥ID', width: 100, align: "center"},
+                    {field: 'key', title: '秘钥信息', align: "center"},
+                    {field: 'plaintextDisplayMode', title: '明文展示模式', align: "center", templet: function (value) {
+                            let values = {"BOTH_ENDS":"两端明文", "LEFT":"左边明文", "MIDDLE":"中间明文", "RIGHT":"右边明文"}
+                            return values[value.plaintextDisplayMode]?values[value.plaintextDisplayMode]:"";
+                        }
+                    },
+                    {field: 'plaintextProportion', title: '明文展示占比', align: "center"},
+                    {field: 'enabled', title: '当前生效秘钥', align: "center", templet: function(d){
+                        if(d.enabled){
+                            return "是";
+                        }else {
+                            return "否";
+                        }
+                    }},
+                    {field: 'createdDate', title: '创建时间', align: "center"}
+                ]]
+            });
+            form.verify({
+                key:[/[A-Za-z0-9]{22}/, "秘钥必须是A-Z、a-z、0-9组成的22位字符串"],
+                plaintextProportion: function(value){
+                    if(value<=0 && value>=1){
+                        return '明文展示占比取值需在0~1之间';
+                    }
+                }
+            });
+            layui.$('#filling').on('click', function(){
+                layer.load(2, {time: 5*1000});
+                $.get('key', function(data){
+                    if("SUCCESS"==data.errorCode){
+                        form.val('keyForm', {"key": data.data, "plaintextDisplayMode": "BOTH_ENDS", "plaintextProportion": 0.3});
+                        layer.closeAll('loading');
+                    }else {
+                        layer.closeAll('loading');
+                        layer.load(0, {content: '自动填充秘钥信息出错，错误原因：'+data.message, time: 2*1000});
+                    }
+                });
+                return false;
+            });
+            layui.$('#newKeyInfo').on('click', function(){
+                layer.load(2, {time: 10*1000});
+                let data = form.val('keyForm');
+                $.ajax({
+                    url: "key/info",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(data),
+                    timeout: 10 * 1000,
+                    success: function (data) {
+                        if ("SUCCESS" == data.errorCode) {
+                            table.reload('keys');
+                            form.val('keyForm', {"key": "", "plaintextDisplayMode": "BOTH_ENDS", "plaintextProportion": 0.3});
+                            layer.closeAll('loading');
+                        } else {
+                            layer.closeAll('loading');
+                            layer.load(0, {content: '新建秘钥信息出错，错误原因：' + data.message, time: 2 * 1000});
+                        }
+                    },
+                    error: function () {
+                        layer.load(0, {content: '新建秘钥信息出错', time: 2 * 1000});
+                    }
+                });
+                return false;
+            });
+        });
+        function getNumber(value) {
+            if(null==value || value.length==0){
+                return '0.';
+            }
+            //正则替换，获取输入内容中0~1之间的两位小数
+            let result = value.match(/^(0\.)[0-9]{1,2}/g);
+            if(null == result){
+                return  '0.';
+            }else {
+                if('0.00'==result[0]){
+                    return '0.0';
+                }else {
+                    return result[0];
+                }
+            }
+        }
+    </script>
+</body>
+</html>

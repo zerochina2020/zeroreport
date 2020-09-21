@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <property name="now" value="now()" dbms="mysql,h2"/>
+    <property name="now" value="current_timestamp" dbms="postgresql"/>
+    <property name="now" value="sysdate" dbms="oracle"/>
+    <property name="autoIncrement" value="true" dbms="mysql,h2,postgresql,oracle"/>
+
+    <changeSet id="20200920172722" author="jiaquan">
+        <createTable tableName="zero_report_config" remarks="报表配置表">
+            <column name="id" type="bigint" autoIncrement="${autoIncrement}">
+                <constraints unique="true" primaryKey="true"></constraints>
+            </column>
+            <column name="report_code" type="varchar(100)" remarks="报表编码">
+                <constraints nullable="false" unique="true"></constraints>
+            </column>
+            <column name="report_name" type="varchar(200)" remarks="报表名称">
+                <constraints nullable="false"></constraints>
+            </column>
+            <column name="visible_role" type="varchar(500)" remarks="可查看报表角色(多个,号分隔)"></column>
+            <column name="visible_user" type="varchar(2000)" remarks="可查看报表人员(多个,号分隔)"></column>
+            <column name="report_remark" type="varchar(500)" remarks="报表备注"></column>
+            <column name="report_sql" type="mediumtext" remarks="报表查询SQL"></column>
+            <column name="created_date" type="datetime" defaultValueDate="${now}" remarks="创建时间">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated_date" type="datetime" defaultValueDate="${now}" remarks="最后更新时间">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

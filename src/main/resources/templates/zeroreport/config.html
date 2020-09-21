@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>报表配置</title>
+    <link rel="stylesheet" href="css/layui.css">
+</head>
+<body>
+    <div style="padding: 10px;">
+        <div class="layui-collapse">
+            <div class="layui-colla-item">
+                <h2 class="layui-colla-title">报表模板新增</h2>
+                <div class="layui-colla-content layui-show">
+                    <form class="layui-form layui-form-pane" id="config" lay-filter="config">
+                        <div class="layui-form-item">
+                            <div class="layui-inline" style="width: 48%;">
+                                <label class="layui-form-label">报表名称</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="reportName" lay-verify="required" autocomplete="off" placeholder="请输入报表名称" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline" style="width: 48%;float: right;margin-right: 0px;">
+                                <label class="layui-form-label">报表编码</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="reportCode" lay-verify="required" autocomplete="off" placeholder="请定义报表编码，用于唯一识别报表" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">报表角色</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="visibleRole" autocomplete="off" placeholder="请输入可查看报表角色(多个,号分隔)" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">报表人员</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="visibleUser" autocomplete="off" placeholder="请输入可查看报表人员(多个,号分隔)" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">报表备注</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="reportRemark" autocomplete="off" placeholder="请输入报表备注" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item layui-form-text">
+                            <label class="layui-form-label">报表SQL</label>
+                            <div class="layui-input-block">
+                                <textarea name="reportSql" placeholder="请编辑报表SQL" lay-verify="required" class="layui-textarea"></textarea>
+                            </div>
+                        </div>
+                        <div class="layui-form-item" style="margin-bottom: 5px;">
+                            <div class="layui-input-block" style="float: right;">
+                                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                                <button type="button" class="layui-btn" id="reportConfig">保存模板</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="layui-colla-item">
+                <h2 class="layui-colla-title">报表模板查看</h2>
+                <div class="layui-colla-content">
+                    <table class="layui-hide" id="configs" lay-filter="configs"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/html" id="configToolbar">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    </script>
+    <script src="layui.js"></script>
+    <script>
+        //一般直接写在一个js文件中
+        layui.use(['table', 'element', 'form', 'layer'], function(){
+            let table = layui.table, element = layui.element, form = layui.form, layer = layui.layer, $ = layui.jquery;
+            table.render({
+                elem: '#configs',
+                url:'configs',
+                page: true,
+                response: {
+                    statusName: 'errorCode',
+                    statusCode: "SUCCESS",
+                    msgName: 'message',
+                    countName: 'totalSize',
+                    dataName: 'data'
+                },
+                cols: [[
+                    {field: 'id', title: 'ID', width: 60, align: "center"},
+                    {field: 'reportName', title: '报表名称', align: "left"},
+                    {field: 'reportCode', title: '报表编码', align: "left"},
+                    {field: 'visibleRole', title: '报表角色', align: "left"},
+                    {field: 'visibleUser', title: '报表人员', align: "left"},
+                    {field: 'reportLink', title: '报表链接', align: "left"},
+                    {field: 'reportSql', title: '报表SQL', align: "left"},
+                    {field: 'lastUpdatedDate', title: '修改时间', align: "left"},
+                    {fixed: 'right', width:100, align:'center', toolbar: '#configToolbar'}
+                ]]
+            });
+            table.on('tool(configs)', function (obj) {
+                let data = obj.data;
+                let layEvent = obj.event;
+                if(layEvent === 'edit'){
+                    form.val('config', {"reportName":data.reportName,"reportCode":data.reportCode,"visibleRole":data.visibleRole,"visibleUser":data.visibleUser,"reportRemark":data.reportRemark,"reportLink":data.reportLink,"reportSql":data.reportSql});
+                }
+            });
+            layui.$('#reportConfig').on('click', function(){
+                layer.load(2, {time: 10*1000});
+                let data = form.val('config');
+                $.ajax({
+                    url: "config",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(data),
+                    timeout: 10 * 1000,
+                    success: function (data) {
+                        if ("SUCCESS" == data.errorCode) {
+                            table.reload('configs');
+                            form.val('config', {"reportName":"","reportCode":"","visibleRole":"","visibleUser":"","reportRemark":"","reportLink":"","reportSql":""});
+                            layer.closeAll('loading');
+                        } else {
+                            layer.closeAll('loading');
+                            layer.msg("保存模板出错，错误原因：" + data.message);
+                        }
+                    },
+                    error: function () {
+                        layer.msg("保存模板出错");
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+</body>
+</html>

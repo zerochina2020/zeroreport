@@ -1,7 +1,7 @@
 # Read Me First
 The following was discovered as part of building this project:
 
-* The original package name 'com.zero-china.zeroreport-spring-boot-starter' is invalid and this project uses 'com.zerochina.zeroreportspringbootstarter' instead.
+* The original package name 'com.zero-china.zeroreport-spring-boot-starter' is invalid and this project uses 'com.zerochina.report' instead.
 
 # Getting Started
 

@@ -1,13 +1,13 @@
-package com.zerochina.zeroreportspringbootstarter;
+package com.zerochina.report;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ZeroreportSpringBootStarterApplication {
+public class ZeroReportApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ZeroreportSpringBootStarterApplication.class, args);
+		SpringApplication.run(ZeroReportApplication.class, args);
 	}
 
 }
